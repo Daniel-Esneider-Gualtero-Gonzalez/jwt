@@ -1,0 +1,16 @@
+{
+  "name": "jwt-tokens",
+  "version": "1.0.0",
+  "description": "json web tokens ",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "daniel gualtero",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
