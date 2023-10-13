@@ -1,8 +1,14 @@
 const http = require('http')
 const express = require('express')
+// dotenv para cargar las varibales de entorno que utilizare para el proyecto
+const dotenv =  require("dotenv").config()
 const jwt = require('jsonwebtoken')
 
+
+
 const app = express()
+
+app.use(express.json())
 
 // midleware cors
 app.use((req,res,next)=>{
@@ -26,11 +32,51 @@ app.get("/",(req,res)=>{
     res.send("Hola bienvenido a json web tokens")
 })
 
-app.get("/api/auth0/",(req,res)=>{
-    let payloadUser = {userid:2,username:"Daniel"}
-    let userToken = jwt.sign(payloadUser,"12345",{expiresIn:60})
+app.post("/api/auth0/",(req,res)=>{
+    console.log("data de user ", req.body)
+    const payloadUser =  req.body
+    let userToken = jwt.sign(payloadUser,process.env.JWTSECRET,{expiresIn:"1d"})
     res.status(200).json({token:userToken})
 })
+
+
+app.get("/api/auth0/resfrestToken",(req,res)=>{
+
+    const tokenBearer = req.headers.authorization.split(" ")[1]
+    let token = null
+
+    if(!tokenBearer) return res.status(400).json({error:"Invalid request" , message: "Falta el token dea cceso a la solicitud"})
+
+    try {
+        const verifiToken = jwt.verify(tokenBearer,process.env.JWTSECRET)
+        // despues utilizamos el mismo token pero eliminamos la fecha antigua de expiracion
+        delete verifiToken.exp
+
+        token = verifiToken
+       
+    } catch (error) {
+
+        return res.status(401).json({message: "Token expired"})
+    }
+
+    
+    jwt.sign(token,process.env.JWTSECRET,{expiresIn:"1d"},(err,token)=>{
+
+        if(err) {
+            return res.status(500).json({message:"Error al Refrescar el token"})
+        }
+
+        return res.status(200).json({token:token})
+        
+        
+    })
+
+    
+
+    
+})
+
+
 
 app.get("/api/notes/",(req,res)=>{
     
@@ -40,7 +86,7 @@ app.get("/api/notes/",(req,res)=>{
 
     try {
         // verifica el token es valido
-        const tokendecode =  jwt.verify(token,"12345")
+        const tokendecode =  jwt.verify(token,process.env.JWTSECRET)
         console.log("token decode",tokendecode)
     } catch (error) {
         console.log("Token invalido es malo o expiro")
