@@ -42,14 +42,12 @@ app.post("/api/auth0/",(req,res)=>{
 
 app.get("/api/auth0/resfrestToken",async (req,res)=>{
 
+    if(req.headers.authorization === undefined || !req.headers.authorization) return res.status(400).json({error:"Invalid request" , message: "Falta el token dea cceso a la solicitud"})
+
     const tokenBearer = req.headers.authorization.split(" ")[1]
 
-    console.log("solicitaron refrest")
-
-    // datos que ya vienen en el token viejo
+    // payload para volver a enviar que ya vienen en el token viejo
     let token = null
-
-    if(!tokenBearer) return res.status(400).json({error:"Invalid request" , message: "Falta el token dea cceso a la solicitud"})
 
     try {
         const verifiToken = jwt.verify(tokenBearer,process.env.JWTSECRET)
@@ -57,6 +55,7 @@ app.get("/api/auth0/resfrestToken",async (req,res)=>{
 
        
         delete verifiToken.exp
+        delete verifiToken.iat
 
         token = verifiToken
        
@@ -67,20 +66,16 @@ app.get("/api/auth0/resfrestToken",async (req,res)=>{
 
     // SOLUCIONAR EL PAYLOAD YA QUE AL ENVIARLE LOS DATOS DEL VIEJO TOKEN
     // LA FECHA DE EXPIRACION NO CAMBIA
-    jwt.sign({nombre:"lucass"},process.env.JWTSECRET,{expiresIn:"1d"},(err,token)=>{
+    jwt.sign(token,process.env.JWTSECRET,{expiresIn:"1d"},(err,token)=>{
 
         if(err) {
             return res.status(500).json({message:"Error al Refrescar el token"})
         }
 
 
-        return res.status(200).json({token:token})
-        
+        return res.status(200).json({token:token})  
         
     })
-
-    
-
     
 })
 
@@ -88,7 +83,7 @@ app.get("/api/auth0/resfrestToken",async (req,res)=>{
 
 app.get("/api/notes/",(req,res)=>{
     
-    // if( !req.body === undefined && req.body.hasOwnProperty("token")) res.send("se encuentra el token")
+    // REALIZAR MIDLEWARE QUE VALIDE EL TOKEN
     const token = req.headers.authorization.split(" ")[1]
 
 
