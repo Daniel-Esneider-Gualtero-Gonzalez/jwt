@@ -35,14 +35,18 @@ app.get("/",(req,res)=>{
 app.post("/api/auth0/",(req,res)=>{
     console.log("data de user ", req.body)
     const payloadUser =  req.body
-    let userToken = jwt.sign(payloadUser,process.env.JWTSECRET,{expiresIn:"1d"})
+    let userToken = jwt.sign(payloadUser,process.env.JWTSECRET,{expiresIn:"8s"})
     res.status(200).json({token:userToken})
 })
 
 
-app.get("/api/auth0/resfrestToken",(req,res)=>{
+app.get("/api/auth0/resfrestToken",async (req,res)=>{
 
     const tokenBearer = req.headers.authorization.split(" ")[1]
+
+    console.log("solicitaron refrest")
+
+    // datos que ya vienen en el token viejo
     let token = null
 
     if(!tokenBearer) return res.status(400).json({error:"Invalid request" , message: "Falta el token dea cceso a la solicitud"})
@@ -50,21 +54,25 @@ app.get("/api/auth0/resfrestToken",(req,res)=>{
     try {
         const verifiToken = jwt.verify(tokenBearer,process.env.JWTSECRET)
         // despues utilizamos el mismo token pero eliminamos la fecha antigua de expiracion
+
+       
         delete verifiToken.exp
 
         token = verifiToken
        
     } catch (error) {
-
+        console.log("ERROR AL VERIFICAR EL TOKEN",error)
         return res.status(401).json({message: "Token expired"})
     }
 
-    
-    jwt.sign(token,process.env.JWTSECRET,{expiresIn:"1d"},(err,token)=>{
+    // SOLUCIONAR EL PAYLOAD YA QUE AL ENVIARLE LOS DATOS DEL VIEJO TOKEN
+    // LA FECHA DE EXPIRACION NO CAMBIA
+    jwt.sign({nombre:"lucass"},process.env.JWTSECRET,{expiresIn:"1d"},(err,token)=>{
 
         if(err) {
             return res.status(500).json({message:"Error al Refrescar el token"})
         }
+
 
         return res.status(200).json({token:token})
         
