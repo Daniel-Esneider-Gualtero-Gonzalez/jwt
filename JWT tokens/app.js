@@ -34,7 +34,7 @@ app.get("/",(req,res)=>{
 
 app.post("/api/auth0/",(req,res)=>{
     console.log("data de user ", req.body)
-    const payloadUser =  req.body
+    const payloadUser =  {...req.body,role:{admin:true}}
     let userToken = jwt.sign(payloadUser,process.env.JWTSECRET,{expiresIn:"8s"})
     res.status(200).json({token:userToken})
 })
@@ -58,6 +58,11 @@ app.get("/api/auth0/resfrestToken",async (req,res)=>{
         delete verifiToken.iat
 
         token = verifiToken
+        
+        // para probar en el front que navlink mostrar dependiendo del rol
+
+        // agregar un objeto con todos los roles que tenga el usuario ej: {user:true, admin:false}
+        token["role"] = {admin:false}
        
     } catch (error) {
         console.log("ERROR AL VERIFICAR EL TOKEN",error)
